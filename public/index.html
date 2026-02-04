@@ -1,77 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Private Chat</title>
+<meta charset="UTF-8">
+<title>Private Chat</title>
 
-  <script src="/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      margin: 0;
-      padding: 0;
-    }
+<style>
 
-    #loginBox {
-      width: 300px;
-      margin: 120px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px gray;
-      text-align: center;
-    }
+/* ================= BODY ================= */
 
-    #loginBox input {
-      width: 90%;
-      padding: 8px;
-      margin: 8px 0;
-    }
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", Arial, sans-serif;
 
-    #chatBox {
-      display: none;
-      width: 400px;
-      margin: 30px auto;
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px gray;
-    }
+  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-    #messages {
-      height: 250px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 5px;
-      margin-bottom: 10px;
-    }
 
-    .msg {
-      margin: 5px 0;
-    }
+/* ================= LOGIN ================= */
 
-    .me {
-      color: green;
-      font-weight: bold;
-    }
+#loginBox {
+  width: 90%;
+  max-width: 350px;
+  background: #1e1e1e;
+  padding: 25px;
+  border-radius: 15px;
+  text-align: center;
 
-    .other {
-      color: blue;
-      font-weight: bold;
-    }
-  </style>
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  color: white;
+}
+
+#loginBox h2 {
+  margin-bottom: 15px;
+}
+
+#loginBox input {
+  width: 95%;
+  padding: 10px;
+  margin: 10px 0;
+
+  border-radius: 8px;
+  border: none;
+
+  background: #2c2c2c;
+  color: white;
+  font-size: 15px;
+}
+
+#loginBox button {
+  width: 100%;
+  padding: 10px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #25d366;
+  color: black;
+
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#loginBox button:hover {
+  opacity: 0.8;
+}
+
+
+/* ================= CHAT ================= */
+
+#chatBox {
+  display: none;
+
+  width: 95%;
+  max-width: 420px;
+  height: 85vh;
+
+  background: #121212;
+  color: white;
+
+  border-radius: 15px;
+  box-shadow: 0 0 25px rgba(0,0,0,0.7);
+
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ================= HEADER ================= */
+
+#chatHeader {
+  padding: 12px;
+  background: #1f1f1f;
+  text-align: center;
+
+  font-weight: bold;
+  border-radius: 15px 15px 0 0;
+}
+
+
+/* ================= MESSAGES ================= */
+
+#messages {
+  flex: 1;
+  overflow-y: auto;
+
+  padding: 10px;
+  background: #0d0d0d;
+}
+
+
+/* WhatsApp Bubble */
+
+.msg {
+  max-width: 75%;
+  margin: 6px 0;
+  padding: 8px 12px;
+
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.me {
+  background: #25d366;
+  color: black;
+
+  margin-left: auto;
+  border-bottom-right-radius: 3px;
+}
+
+.other {
+  background: #2a2a2a;
+  color: white;
+
+  margin-right: auto;
+  border-bottom-left-radius: 3px;
+}
+
+
+/* ================= INPUT ================= */
+
+#inputBox {
+  display: flex;
+  padding: 10px;
+
+  background: #1f1f1f;
+  border-radius: 0 0 15px 15px;
+}
+
+#msgInput {
+  flex: 1;
+  padding: 8px;
+
+  border: none;
+  border-radius: 20px;
+
+  background: #2c2c2c;
+  color: white;
+
+  font-size: 14px;
+  outline: none;
+}
+
+#sendBtn {
+  margin-left: 8px;
+
+  border: none;
+  border-radius: 50%;
+
+  width: 40px;
+  height: 40px;
+
+  background: #25d366;
+  color: black;
+
+  font-size: 16px;
+  cursor: pointer;
+}
+
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 600px) {
+
+  #chatBox {
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  #chatHeader {
+    border-radius: 0;
+  }
+
+  #inputBox {
+    border-radius: 0;
+  }
+
+}
+
+</style>
 </head>
+
 
 <body>
 
+
 <!-- LOGIN -->
+
 <div id="loginBox">
 
-  <h2>Enter Password</h2>
+  <h2>🔐 Enter Password</h2>
 
-  <input type="password" id="password" placeholder="Enter Password">
+  <input type="password" id="password" placeholder="Password">
 
   <button onclick="joinChat()">Join</button>
 
@@ -79,106 +226,134 @@
 
 
 <!-- CHAT -->
+
 <div id="chatBox">
 
-  <h3>Private Chat</h3>
+  <div id="chatHeader">
+    💬 Private Chat
+  </div>
 
   <div id="messages"></div>
 
-  <input type="text" id="msgInput" placeholder="Type message">
+  <div id="inputBox">
 
-  <button onclick="sendMsg()">Send</button>
+    <input type="text" id="msgInput" placeholder="Type message...">
+
+    <button id="sendBtn" onclick="sendMsg()">➤</button>
+
+  </div>
 
 </div>
 
 
 <script>
 
-  const socket = io();
+const socket = io();
 
 
-  // JOIN
-  function joinChat() {
+/* JOIN */
 
-    const password = document.getElementById("password").value;
+function joinChat() {
 
-    if (!password) {
-      alert("Enter Password!");
-      return;
-    }
+  const password = document.getElementById("password").value;
 
-    socket.emit("join", password);
+  if (!password) {
+    alert("Enter Password!");
+    return;
   }
 
+  socket.emit("join", password);
+}
 
-  // JOIN ERROR
-  socket.on("joinError", (msg) => {
-    alert(msg);
+
+/* ERROR */
+
+socket.on("joinError", (msg) => {
+  alert(msg);
+});
+
+
+/* SUCCESS */
+
+socket.on("joinSuccess", () => {
+
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("chatBox").style.display = "flex";
+
+});
+
+
+/* OLD MSG */
+
+socket.on("oldMessages", (msgs) => {
+
+  msgs.forEach(m => {
+    showMsg(m.msg,false);
   });
 
-
-  // JOIN SUCCESS
-  socket.on("joinSuccess", () => {
-
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("chatBox").style.display = "block";
-
-  });
+});
 
 
-  // OLD MESSAGES (OFFLINE)
-  socket.on("oldMessages", (msgs) => {
+/* RECEIVE */
 
-    msgs.forEach(m => {
-      showMessage(m.msg, false);
-    });
+socket.on("message", (data) => {
 
-  });
+  showMsg(data.msg,false);
 
-
-  // RECEIVE MESSAGE
-  socket.on("message", (data) => {
-
-    showMessage(data.msg, false);
-
-  });
+});
 
 
-  // SHOW MESSAGE
-  function showMessage(msg, self) {
+/* SHOW MSG */
 
-    const div = document.createElement("div");
-    div.classList.add("msg");
+function showMsg(msg,self){
 
-    if (self) {
-      div.innerHTML = `<span class="me">Me:</span> ${msg}`;
-    } else {
-      div.innerHTML = `<span class="other">Friend:</span> ${msg}`;
-    }
+  const div=document.createElement("div");
 
-    document.getElementById("messages").appendChild(div);
+  div.classList.add("msg");
 
-    // Auto scroll
-    const box = document.getElementById("messages");
-    box.scrollTop = box.scrollHeight;
+  if(self){
+    div.classList.add("me");
+  }else{
+    div.classList.add("other");
   }
 
+  div.innerText=msg;
 
-  // SEND
-  function sendMsg() {
+  document.getElementById("messages").appendChild(div);
 
-    const msg = document.getElementById("msgInput").value;
+  const box=document.getElementById("messages");
+  box.scrollTop=box.scrollHeight;
 
-    if (!msg) {
-      return;
-    }
+}
 
-    socket.emit("message", msg);
 
-    showMessage(msg, true);
+/* SEND */
 
-    document.getElementById("msgInput").value = "";
+function sendMsg(){
+
+  const msg=document.getElementById("msgInput").value;
+
+  if(!msg) return;
+
+  socket.emit("message",msg);
+
+  showMsg(msg,true);
+
+  document.getElementById("msgInput").value="";
+
+}
+
+
+/* ENTER KEY */
+
+document.getElementById("msgInput")
+.addEventListener("keydown",function(e){
+
+  if(e.key==="Enter"){
+    sendMsg();
   }
+
+});
 
 </script>
 
