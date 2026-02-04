@@ -41,9 +41,15 @@ body {
   margin-bottom: 15px;
 }
 
+/* Password Box */
+
+.passBox {
+  position: relative;
+}
+
 #loginBox input {
-  width: 95%;
-  padding: 10px;
+  width: 100%;
+  padding: 10px 40px 10px 10px;
   margin: 10px 0;
 
   border-radius: 8px;
@@ -53,6 +59,23 @@ body {
   color: white;
   font-size: 15px;
 }
+
+/* Eye Icon */
+
+.eye {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #aaa;
+}
+
+.eye:hover {
+  color: white;
+}
+
 
 #loginBox button {
   width: 100%;
@@ -88,7 +111,6 @@ body {
   border-radius: 15px;
   box-shadow: 0 0 25px rgba(0,0,0,0.7);
 
-  display: flex;
   flex-direction: column;
 }
 
@@ -218,7 +240,13 @@ body {
 
   <h2>🔐 Enter Password</h2>
 
-  <input type="password" id="password" placeholder="Password">
+  <div class="passBox">
+
+    <input type="password" id="password" placeholder="Password">
+
+    <span class="eye" onclick="togglePass()">👁️</span>
+
+  </div>
 
   <button onclick="joinChat()">Join</button>
 
@@ -251,6 +279,21 @@ body {
 const socket = io();
 
 
+/* PASSWORD SHOW / HIDE */
+
+function togglePass(){
+
+  const pass = document.getElementById("password");
+
+  if(pass.type === "password"){
+    pass.type = "text";
+  }else{
+    pass.type = "password";
+  }
+
+}
+
+
 /* JOIN */
 
 function joinChat() {
@@ -277,13 +320,10 @@ socket.on("joinError", (msg) => {
 
 socket.on("joinSuccess", () => {
 
-  // hide login view
   document.getElementById("loginBox").style.display = "none";
 
-  // show chat view
   document.getElementById("chatBox").style.display = "flex";
 
-  // make sure page layout adjusts
   document.body.style.justifyContent = "flex-start";
   document.body.style.alignItems = "center";
 
@@ -335,20 +375,18 @@ function showMsg(msg,self){
 
 
 /* SEND */
+
 function sendMsg(){
 
   const msg = document.getElementById("msgInput").value;
 
   if(!msg.trim()) return;
 
-  // Only send to server
   socket.emit("message", msg);
 
-  // Clear input
   document.getElementById("msgInput").value = "";
 
 }
-
 
 
 /* ENTER KEY */
