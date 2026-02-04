@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Private Chat App</title>
+  <title>Private Chat</title>
 
   <script src="/socket.io/socket.io.js"></script>
 
@@ -16,7 +16,7 @@
 
     #loginBox {
       width: 300px;
-      margin: 100px auto;
+      margin: 120px auto;
       background: white;
       padding: 20px;
       border-radius: 10px;
@@ -66,28 +66,24 @@
 
 <body>
 
-<!-- LOGIN BOX -->
+<!-- LOGIN -->
 <div id="loginBox">
 
-  <h2>Join Chat</h2>
+  <h2>Enter Password</h2>
 
-  <input type="text" id="username" placeholder="Enter Name" required>
-
-  <input type="password" id="password" placeholder="Enter Password" required>
+  <input type="password" id="password" placeholder="Enter Password">
 
   <button onclick="joinChat()">Join</button>
 
 </div>
 
 
-<!-- CHAT BOX -->
+<!-- CHAT -->
 <div id="chatBox">
 
   <h3>Private Chat</h3>
 
   <div id="messages"></div>
-
-  <input type="text" id="toUser" placeholder="Send to (username)">
 
   <input type="text" id="msgInput" placeholder="Type message">
 
@@ -100,25 +96,18 @@
 
   const socket = io();
 
-  let myName = "";
 
-  // JOIN CHAT
+  // JOIN
   function joinChat() {
 
-    const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    if (!username || !password) {
-      alert("Fill all fields!");
+    if (!password) {
+      alert("Enter Password!");
       return;
     }
 
-    socket.emit("join", {
-      username: username,
-      password: password
-    });
-
-    myName = username;
+    socket.emit("join", password);
   }
 
 
@@ -128,8 +117,8 @@
   });
 
 
-  // SUCCESS JOIN
-  socket.on("onlineUsers", () => {
+  // JOIN SUCCESS
+  socket.on("joinSuccess", () => {
 
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("chatBox").style.display = "block";
@@ -137,41 +126,58 @@
   });
 
 
-  // RECEIVE MESSAGE
-  socket.on("private", (data) => {
+  // OLD MESSAGES (OFFLINE)
+  socket.on("oldMessages", (msgs) => {
 
-    const div = document.createElement("div");
-    div.classList.add("msg");
-
-    if (data.self) {
-      div.innerHTML = `<span class="me">Me:</span> ${data.msg}`;
-    } else {
-      div.innerHTML = `<span class="other">${data.from}:</span> ${data.msg}`;
-    }
-
-    document.getElementById("messages").appendChild(div);
+    msgs.forEach(m => {
+      showMessage(m.msg, false);
+    });
 
   });
 
 
-  // SEND MESSAGE
+  // RECEIVE MESSAGE
+  socket.on("message", (data) => {
+
+    showMessage(data.msg, false);
+
+  });
+
+
+  // SHOW MESSAGE
+  function showMessage(msg, self) {
+
+    const div = document.createElement("div");
+    div.classList.add("msg");
+
+    if (self) {
+      div.innerHTML = `<span class="me">Me:</span> ${msg}`;
+    } else {
+      div.innerHTML = `<span class="other">Friend:</span> ${msg}`;
+    }
+
+    document.getElementById("messages").appendChild(div);
+
+    // Auto scroll
+    const box = document.getElementById("messages");
+    box.scrollTop = box.scrollHeight;
+  }
+
+
+  // SEND
   function sendMsg() {
 
-    const to = document.getElementById("toUser").value;
     const msg = document.getElementById("msgInput").value;
 
-    if (!to || !msg) {
-      alert("Fill all fields!");
+    if (!msg) {
       return;
     }
 
-    socket.emit("private", {
-      to: to,
-      msg: msg
-    });
+    socket.emit("message", msg);
+
+    showMessage(msg, true);
 
     document.getElementById("msgInput").value = "";
-
   }
 
 </script>

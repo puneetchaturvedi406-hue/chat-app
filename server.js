@@ -4,12 +4,16 @@ const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-const CHAT_PASSWORD = "12345"; // Change password here
-
 const app = express();
 const server = http.createServer(app);
 
-// Socket with CORS
+// ================= CONFIG =================
+
+const CHAT_PASSWORD = "12345"; // Change password here
+const MAX_USERS = 2;
+
+// ================= SOCKET =================
+
 const io = new Server(server, {
   cors: {
     origin: "*"
@@ -18,98 +22,92 @@ const io = new Server(server, {
 
 app.use(express.static("public"));
 
-/* ================= DATABASE ================= */
+// ================= DATABASE =================
 
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch(err => console.log("MongoDB Error ❌", err));
 
-
 const MsgSchema = new mongoose.Schema({
-  from: String,
-  to: String,
   msg: String,
-  time: { type: Date, default: Date.now }
+  time: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 const Message = mongoose.model("Message", MsgSchema);
 
+// ================= USERS =================
 
-/* ================= USERS ================= */
+let connectedUsers = 0;
 
-let users = {};        // socket.id -> username
-let onlineUsers = {}; // username -> socket.id
-
-
-/* ================= SOCKET ================= */
+// ================= SOCKET LOGIC =================
 
 io.on("connection", (socket) => {
 
-  // JOIN
-  socket.on("join", (data) => {
+  console.log("New user connected:", socket.id);
 
-    const { username, password } = data;
+  // JOIN WITH PASSWORD
+  socket.on("join", async (password) => {
 
     if (password !== CHAT_PASSWORD) {
       socket.emit("joinError", "Wrong Password ❌");
       return;
     }
 
-    users[socket.id] = username;
-    onlineUsers[username] = socket.id;
+    if (connectedUsers >= MAX_USERS) {
+      socket.emit("joinError", "Room Full ❌");
+      return;
+    }
 
-    io.emit("onlineUsers", Object.keys(onlineUsers));
+    connectedUsers++;
+
+    socket.join("privateRoom");
+
+    console.log("User joined room ✅");
+
+    // Send old messages (offline messages)
+    const oldMessages = await Message.find()
+      .sort({ time: 1 })
+      .limit(100);
+
+    socket.emit("oldMessages", oldMessages);
+
+    socket.emit("joinSuccess", "Joined Successfully ✅");
   });
 
-
-  // PRIVATE MESSAGE
-  socket.on("private", async (data) => {
-
-    const { to, msg } = data;
-    const from = users[socket.id];
+  // SEND MESSAGE
+  socket.on("message", async (msg) => {
 
     try {
-      await Message.create({ from, to, msg });
+      const newMsg = await Message.create({ msg });
+
+      // Send to both users
+      io.to("privateRoom").emit("message", newMsg);
+
     } catch (err) {
       console.log("DB Save Error ❌", err);
     }
 
-    // Send to receiver
-    if (onlineUsers[to]) {
-      io.to(onlineUsers[to]).emit("private", {
-        from,
-        msg
-      });
-    }
-
-    // Send back to sender
-    socket.emit("private", {
-      from,
-      msg,
-      self: true
-    });
   });
-
 
   // DISCONNECT
   socket.on("disconnect", () => {
 
-    const name = users[socket.id];
-
-    if (name) {
-      delete onlineUsers[name];
+    if (connectedUsers > 0) {
+      connectedUsers--;
     }
 
-    delete users[socket.id];
-
-    io.emit("onlineUsers", Object.keys(onlineUsers));
+    console.log("User disconnected ❌");
   });
 
 });
 
+// ================= SERVER =================
 
-/* ================= SERVER ================= */
+const PORT = process.env.PORT || 3000;
 
-server.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+server.listen(PORT, () => {
+  console.log("Server running on port", PORT);
 });
