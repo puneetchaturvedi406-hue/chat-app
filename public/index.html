@@ -328,20 +328,20 @@ function showMsg(msg,self){
 
 
 /* SEND */
-
 function sendMsg(){
 
-  const msg=document.getElementById("msgInput").value;
+  const msg = document.getElementById("msgInput").value;
 
-  if(!msg) return;
+  if(!msg.trim()) return;
 
-  socket.emit("message",msg);
+  // Only send to server
+  socket.emit("message", msg);
 
-  showMsg(msg,true);
-
-  document.getElementById("msgInput").value="";
+  // Clear input
+  document.getElementById("msgInput").value = "";
 
 }
+
 
 
 /* ENTER KEY */
