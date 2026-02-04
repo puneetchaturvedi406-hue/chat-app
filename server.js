@@ -9,7 +9,7 @@ const server = http.createServer(app);
 
 // ================= CONFIG =================
 
-const CHAT_PASSWORD = "12345"; // Change password here
+const CHAT_PASSWORD = "NAVRIDHI"; // Change password here
 const MAX_USERS = 2;
 
 // ================= SOCKET =================
