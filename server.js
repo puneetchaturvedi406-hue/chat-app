@@ -15,7 +15,7 @@ const server = http.createServer(app);
 
 const CHAT_PASSWORD = "NAVRIDHI"; // Change password here
 const MAX_USERS = 2;
-const ADMIN_PASSWORD = "ADMIN123";
+const ADMIN_PASSWORD = "NAVRIDHI";
 
 // ================= MIDDLEWARE =================
 
