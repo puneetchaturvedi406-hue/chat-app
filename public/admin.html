@@ -42,6 +42,11 @@ th {
 #panel {
   display: none;
 }
+
+.deleted {
+  color: red;
+  font-style: italic;
+}
 </style>
 </head>
 
@@ -75,7 +80,7 @@ th {
 <!-- MESSAGES -->
 
 <div class="box">
-  <h4>Messages</h4>
+  <h4>Messages (With Delete Status)</h4>
   <div id="msgs"></div>
 </div>
 
@@ -144,17 +149,37 @@ async function loadData(){
   document.getElementById("users").innerText = data.users;
 
 
-  // MESSAGES
+  // MESSAGES (WITH STATUS)
+
   let msgHtml = "";
 
   data.messages.forEach(m => {
-    msgHtml += `<p>${m.msg}</p>`;
+
+    if(m.deleted){
+
+      msgHtml += `
+        <p class="deleted">
+          ❌ ${m.msg} (Deleted)
+        </p>
+      `;
+
+    } else {
+
+      msgHtml += `
+        <p>
+          ✅ ${m.msg}
+        </p>
+      `;
+
+    }
+
   });
 
   document.getElementById("msgs").innerHTML = msgHtml;
 
 
   // SCANS
+
   let scanHtml = "";
 
   data.scans.forEach(s => {
