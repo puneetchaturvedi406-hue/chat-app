@@ -30,31 +30,13 @@ const io = new Server(server, {
   }
 });
 
-// ================= QR TRACK ROUTE =================
-
-app.get("/track", (req, res) => {
-
-  const ip = requestIp.getClientIp(req);
-  const geo = geoip.lookup(ip);
-
-  const userData = {
-    ip: ip,
-    country: geo?.country,
-    city: geo?.city,
-    time: new Date()
-  };
-
-  console.log("📌 QR Scan:", userData);
-
-  // Redirect to main site
-  res.redirect("https://quitetalks.onrender.com");
-});
-
 // ================= DATABASE =================
 
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch(err => console.log("MongoDB Error ❌", err));
+
+// ================= MESSAGE SCHEMA =================
 
 const MsgSchema = new mongoose.Schema({
   msg: String,
@@ -66,9 +48,48 @@ const MsgSchema = new mongoose.Schema({
 
 const Message = mongoose.model("Message", MsgSchema);
 
+// ================= SCAN SCHEMA =================
+
+const ScanSchema = new mongoose.Schema({
+  ip: String,
+  country: String,
+  city: String,
+  time: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const Scan = mongoose.model("Scan", ScanSchema);
+
 // ================= USERS =================
 
 let connectedUsers = 0;
+
+// ================= QR TRACK ROUTE =================
+
+app.get("/track", async (req, res) => {
+
+  const ip = requestIp.getClientIp(req);
+  const geo = geoip.lookup(ip);
+
+  const scanData = {
+    ip: ip,
+    country: geo?.country || "Unknown",
+    city: geo?.city || "Unknown"
+  };
+
+  console.log("📌 QR Scan:", scanData);
+
+  // Save in DB
+  try {
+    await Scan.create(scanData);
+  } catch (err) {
+    console.log("Scan Save Error ❌", err);
+  }
+
+  res.redirect("https://quitetalks.onrender.com");
+});
 
 // ================= ADMIN PANEL =================
 
@@ -93,9 +114,14 @@ app.get("/admin-data", async (req, res) => {
       .sort({ time: -1 })
       .limit(50);
 
+    const scans = await Scan.find()
+      .sort({ time: -1 })
+      .limit(100);
+
     res.json({
       users: connectedUsers,
-      messages: messages
+      messages: messages,
+      scans: scans
     });
 
   } catch (err) {
