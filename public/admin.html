@@ -1,76 +1,182 @@
 <!DOCTYPE html>
+<html>
+<head>
+<title>QuietTalks Admin Panel</title>
 
+<style>
+body {
+  font-family: Arial;
+  background: #111;
+  color: white;
+  padding: 20px;
+}
+
+input, button {
+  padding: 8px;
+  margin: 5px;
+}
+
+.box {
+  background: #222;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid gray;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background: #333;
+}
+
+#panel {
+  display: none;
+}
+</style>
+</head>
+
+<body>
 
 <h2>QuietTalks Admin Panel</h2>
 
+<!-- LOGIN -->
 
 <div id="login">
-<input type="password" id="pass" placeholder="Admin Password">
-<br>
-<button onclick="login()">Login</button>
+  <input type="password" id="pass" placeholder="Admin Password">
+  <br>
+  <button onclick="login()">Login</button>
 </div>
 
+
+<!-- DASHBOARD -->
 
 <div id="panel">
+
 <h3>Dashboard</h3>
 
+<!-- USERS -->
 
 <div class="box">
-<h4>Connected Users</h4>
-<p id="users">0</p>
+  <h4>Connected Users</h4>
+  <p id="users">0</p>
 </div>
 
 
+<!-- MESSAGES -->
+
 <div class="box">
-<h4>Messages</h4>
-<div id="msgs"></div>
+  <h4>Messages</h4>
+  <div id="msgs"></div>
 </div>
+
+
+<!-- SCAN HISTORY -->
+
+<div class="box">
+  <h4>QR / Visitor History</h4>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>IP</th>
+        <th>Country</th>
+        <th>City</th>
+      </tr>
+    </thead>
+
+    <tbody id="scanTable">
+    </tbody>
+  </table>
+
+</div>
+
 </div>
 
 
 <script>
+
 async function login() {
-const pass = document.getElementById("pass").value;
 
+  const pass = document.getElementById("pass").value;
 
-const res = await fetch("/admin-login", {
-method: "POST",
-headers: {"Content-Type": "application/json"},
-body: JSON.stringify({ password: pass })
-});
+  const res = await fetch("/admin-login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ password: pass })
+  });
 
+  const data = await res.json();
 
-const data = await res.json();
+  if(data.success){
 
+    document.getElementById("login").style.display = "none";
+    document.getElementById("panel").style.display = "block";
 
-if(data.success){
-document.getElementById("login").style.display = "none";
-document.getElementById("panel").style.display = "block";
-loadData();
-} else {
-alert("Wrong Password");
+    loadData();
+
+  } else {
+
+    alert("Wrong Password ❌");
+
+  }
 }
-}
+
 
 
 async function loadData(){
-const res = await fetch("/admin-data");
-const data = await res.json();
+
+  const res = await fetch("/admin-data");
+  const data = await res.json();
 
 
-document.getElementById("users").innerText = data.users;
+  // USERS
+  document.getElementById("users").innerText = data.users;
 
 
-let html = "";
-data.messages.forEach(m => {
-html += `<p>${m.msg}</p>`;
-});
+  // MESSAGES
+  let msgHtml = "";
+
+  data.messages.forEach(m => {
+    msgHtml += `<p>${m.msg}</p>`;
+  });
+
+  document.getElementById("msgs").innerHTML = msgHtml;
 
 
-document.getElementById("msgs").innerHTML = html;
+  // SCANS
+  let scanHtml = "";
+
+  data.scans.forEach(s => {
+
+    const time = new Date(s.time).toLocaleString();
+
+    scanHtml += `
+      <tr>
+        <td>${time}</td>
+        <td>${s.ip}</td>
+        <td>${s.country}</td>
+        <td>${s.city}</td>
+      </tr>
+    `;
+
+  });
+
+  document.getElementById("scanTable").innerHTML = scanHtml;
+
 }
-</script>
 
+</script>
 
 </body>
 </html>
