@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+
+<h2>QuietTalks Admin Panel</h2>
+
+
+<div id="login">
+<input type="password" id="pass" placeholder="Admin Password">
+<br>
+<button onclick="login()">Login</button>
+</div>
+
+
+<div id="panel">
+<h3>Dashboard</h3>
+
+
+<div class="box">
+<h4>Connected Users</h4>
+<p id="users">0</p>
+</div>
+
+
+<div class="box">
+<h4>Messages</h4>
+<div id="msgs"></div>
+</div>
+</div>
+
+
+<script>
+async function login() {
+const pass = document.getElementById("pass").value;
+
+
+const res = await fetch("/admin-login", {
+method: "POST",
+headers: {"Content-Type": "application/json"},
+body: JSON.stringify({ password: pass })
+});
+
+
+const data = await res.json();
+
+
+if(data.success){
+document.getElementById("login").style.display = "none";
+document.getElementById("panel").style.display = "block";
+loadData();
+} else {
+alert("Wrong Password");
+}
+}
+
+
+async function loadData(){
+const res = await fetch("/admin-data");
+const data = await res.json();
+
+
+document.getElementById("users").innerText = data.users;
+
+
+let html = "";
+data.messages.forEach(m => {
+html += `<p>${m.msg}</p>`;
+});
+
+
+document.getElementById("msgs").innerHTML = html;
+}
+</script>
+
+
+</body>
+</html>

@@ -15,6 +15,12 @@ const server = http.createServer(app);
 
 const CHAT_PASSWORD = "NAVRIDHI"; // Change password here
 const MAX_USERS = 2;
+const ADMIN_PASSWORD = "ADMIN123";
+
+// ================= MIDDLEWARE =================
+
+app.use(express.static("public"));
+app.use(express.json());
 
 // ================= SOCKET =================
 
@@ -24,10 +30,7 @@ const io = new Server(server, {
   }
 });
 
-app.use(express.static("public"));
-
 // ================= QR TRACK ROUTE =================
-// 👉 QR code isi link pe banana: /track
 
 app.get("/track", (req, res) => {
 
@@ -43,9 +46,7 @@ app.get("/track", (req, res) => {
 
   console.log("📌 QR Scan:", userData);
 
-  // Yahan MongoDB me bhi save kara sakta hai (future me)
-
-  // Scan ke baad website open kar do
+  // Redirect to main site
   res.redirect("https://quitetalks.onrender.com");
 });
 
@@ -68,6 +69,40 @@ const Message = mongoose.model("Message", MsgSchema);
 // ================= USERS =================
 
 let connectedUsers = 0;
+
+// ================= ADMIN PANEL =================
+
+// Admin Login
+app.post("/admin-login", (req, res) => {
+
+  const { password } = req.body;
+
+  if (password === ADMIN_PASSWORD) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false });
+  }
+});
+
+// Admin Data
+app.get("/admin-data", async (req, res) => {
+
+  try {
+
+    const messages = await Message.find()
+      .sort({ time: -1 })
+      .limit(50);
+
+    res.json({
+      users: connectedUsers,
+      messages: messages
+    });
+
+  } catch (err) {
+    console.log("Admin Error ❌", err);
+    res.status(500).json({ error: "Server Error" });
+  }
+});
 
 // ================= SOCKET LOGIC =================
 
@@ -108,6 +143,7 @@ io.on("connection", (socket) => {
   socket.on("message", async (msg) => {
 
     try {
+
       const newMsg = await Message.create({ msg });
 
       io.to("privateRoom").emit("message", newMsg);
