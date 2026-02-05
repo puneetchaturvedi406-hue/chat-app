@@ -4,16 +4,15 @@ const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-// QR Tracking Packages
+const axios = require("axios");
 const requestIp = require("request-ip");
-const geoip = require("geoip-lite");
 
 const app = express();
 const server = http.createServer(app);
 
 // ================= CONFIG =================
 
-const CHAT_PASSWORD = "NAVRIDHI"; // Change password here
+const CHAT_PASSWORD = "NAVRIDHI";
 const MAX_USERS = 2;
 const ADMIN_PASSWORD = "NAVRIDHI";
 
@@ -66,22 +65,36 @@ const Scan = mongoose.model("Scan", ScanSchema);
 
 let connectedUsers = 0;
 
-// ================= QR TRACK ROUTE =================
+// ================= TRACK ROUTE =================
 
 app.get("/track", async (req, res) => {
 
   const ip = requestIp.getClientIp(req);
-  const geo = geoip.lookup(ip);
+
+  let country = "Unknown";
+  let city = "Unknown";
+
+  try {
+
+    const response = await axios.get(
+      `http://ip-api.com/json/${ip}`
+    );
+
+    country = response.data.countryCode || "Unknown";
+    city = response.data.city || "Unknown";
+
+  } catch (err) {
+    console.log("Location API Error ❌");
+  }
 
   const scanData = {
-    ip: ip,
-    country: geo?.country || "Unknown",
-    city: geo?.city || "Unknown"
+    ip,
+    country,
+    city
   };
 
   console.log("📌 QR Scan:", scanData);
 
-  // Save in DB
   try {
     await Scan.create(scanData);
   } catch (err) {
@@ -93,7 +106,6 @@ app.get("/track", async (req, res) => {
 
 // ================= ADMIN PANEL =================
 
-// Admin Login
 app.post("/admin-login", (req, res) => {
 
   const { password } = req.body;
@@ -105,7 +117,6 @@ app.post("/admin-login", (req, res) => {
   }
 });
 
-// Admin Data
 app.get("/admin-data", async (req, res) => {
 
   try {
@@ -120,23 +131,26 @@ app.get("/admin-data", async (req, res) => {
 
     res.json({
       users: connectedUsers,
-      messages: messages,
-      scans: scans
+      messages,
+      scans
     });
 
   } catch (err) {
+
     console.log("Admin Error ❌", err);
-    res.status(500).json({ error: "Server Error" });
+
+    res.status(500).json({
+      error: "Server Error"
+    });
   }
 });
 
-// ================= SOCKET LOGIC =================
+// ================= SOCKET =================
 
 io.on("connection", (socket) => {
 
-  console.log("New user connected:", socket.id);
+  console.log("New user:", socket.id);
 
-  // JOIN WITH PASSWORD
   socket.on("join", async (password) => {
 
     if (password !== CHAT_PASSWORD) {
@@ -153,19 +167,15 @@ io.on("connection", (socket) => {
 
     socket.join("privateRoom");
 
-    console.log("User joined room ✅");
-
-    // Send old messages
     const oldMessages = await Message.find()
       .sort({ time: 1 })
       .limit(100);
 
     socket.emit("oldMessages", oldMessages);
 
-    socket.emit("joinSuccess", "Joined Successfully ✅");
+    socket.emit("joinSuccess", "Joined ✅");
   });
 
-  // SEND MESSAGE
   socket.on("message", async (msg) => {
 
     try {
@@ -175,12 +185,11 @@ io.on("connection", (socket) => {
       io.to("privateRoom").emit("message", newMsg);
 
     } catch (err) {
-      console.log("DB Save Error ❌", err);
+      console.log("Message Error ❌", err);
     }
 
   });
 
-  // DISCONNECT
   socket.on("disconnect", () => {
 
     if (connectedUsers > 0) {
@@ -197,5 +206,5 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+  console.log("Server running on", PORT);
 });
