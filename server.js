@@ -1,3 +1,4 @@
+const cookieParser = require("cookie-parser");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -20,6 +21,7 @@ const ADMIN_PASSWORD = "NAVRIDHI";
 
 app.use(express.static("public"));
 app.use(express.json());
+app.use(cookieParser());
 
 // ================= SOCKET =================
 
@@ -143,38 +145,32 @@ app.delete("/delete/:id", async (req, res) => {
 });
 // ================= ADMIN AUTH =================
 
-const ADMIN_TOKEN = "QT_" + Math.random().toString(36).slice(2);
-
-
-/* LOGIN */
-
 app.post("/admin-login", (req, res) => {
 
   const { password } = req.body;
 
-  if(password !== ADMIN_PASSWORD){
+  if(password === ADMIN_PASSWORD){
 
-    return res.json({ success:false });
+    res.cookie("admin_auth","yes",{
+      httpOnly:true,
+      maxAge: 1000 * 60 * 60   // 1 hour
+    });
+
+    res.json({ success:true });
+
+  }else{
+
+    res.json({ success:false });
 
   }
-
-  res.json({
-    success:true,
-    token: ADMIN_TOKEN
-  });
 
 });
 
 
-/* GET DATA */
-
 app.get("/admin-data", async (req, res) => {
 
-  const token = req.headers.authorization;
-
-
-  // 🔐 SECURITY CHECK
-  if(token !== ADMIN_TOKEN){
+  // 🔐 Check cookie
+  if(req.cookies.admin_auth !== "yes"){
 
     return res.status(401).json({
       error:"Unauthorized"
@@ -182,15 +178,14 @@ app.get("/admin-data", async (req, res) => {
 
   }
 
-
   try {
 
     const messages = await Message.find()
-      .sort({ time:-1 })
+      .sort({ time: -1 })
       .limit(100);
 
     const scans = await Scan.find()
-      .sort({ time:-1 })
+      .sort({ time: -1 })
       .limit(100);
 
     res.json({
@@ -204,10 +199,20 @@ app.get("/admin-data", async (req, res) => {
     console.log("Admin Error ❌", err);
 
     res.status(500).json({
-      error:"Server Error"
+      error: "Server Error"
     });
-
   }
+
+});
+
+
+// LOGOUT
+
+app.get("/admin-logout",(req,res)=>{
+
+  res.clearCookie("admin_auth");
+
+  res.json({ success:true });
 
 });
 
