@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>QuietTalks Admin Panel</title>
 
 <style>
+
 body {
   font-family: Arial;
   background: #111;
@@ -14,6 +16,18 @@ body {
 input, button {
   padding: 8px;
   margin: 5px;
+  border-radius: 5px;
+  border: none;
+}
+
+button{
+  background: #25d366;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover{
+  opacity: 0.8;
 }
 
 .box {
@@ -33,6 +47,7 @@ th, td {
   border: 1px solid gray;
   padding: 8px;
   text-align: center;
+  font-size: 13px;
 }
 
 th {
@@ -47,19 +62,46 @@ th {
   color: red;
   font-style: italic;
 }
+
+.seen {
+  color: lightgreen;
+}
+
+.notseen {
+  color: orange;
+}
+
+.delBtn{
+  background: red;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.topBar{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 </style>
+
 </head>
 
 <body>
 
-<h2>QuietTalks Admin Panel</h2>
+<h2>🔐 QuietTalks Admin Panel</h2>
 
 <!-- LOGIN -->
 
 <div id="login">
+
   <input type="password" id="pass" placeholder="Admin Password">
   <br>
+
   <button onclick="login()">Login</button>
+
 </div>
 
 
@@ -67,30 +109,59 @@ th {
 
 <div id="panel">
 
-<h3>Dashboard</h3>
+
+<div class="topBar">
+
+  <h3>📊 Dashboard</h3>
+
+  <button onclick="loadData()">🔄 Refresh</button>
+
+</div>
+
 
 <!-- USERS -->
 
 <div class="box">
-  <h4>Connected Users</h4>
+
+  <h4>👥 Connected Users</h4>
+
   <p id="users">0</p>
+
 </div>
 
 
 <!-- MESSAGES -->
 
 <div class="box">
-  <h4>Messages (With Delete Status)</h4>
-  <div id="msgs"></div>
+
+  <h4>💬 Messages</h4>
+
+  <table>
+
+    <thead>
+      <tr>
+        <th>Message</th>
+        <th>Seen</th>
+        <th>Status</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+
+    <tbody id="msgTable"></tbody>
+
+  </table>
+
 </div>
 
 
 <!-- SCAN HISTORY -->
 
 <div class="box">
-  <h4>QR / Visitor History</h4>
+
+  <h4>🌍 QR / Visitor History</h4>
 
   <table>
+
     <thead>
       <tr>
         <th>Time</th>
@@ -100,8 +171,8 @@ th {
       </tr>
     </thead>
 
-    <tbody id="scanTable">
-    </tbody>
+    <tbody id="scanTable"></tbody>
+
   </table>
 
 </div>
@@ -111,21 +182,39 @@ th {
 
 <script>
 
+
+/* ================= LOGIN ================= */
+
 async function login() {
 
   const pass = document.getElementById("pass").value;
 
+  if(!pass){
+    alert("Enter password");
+    return;
+  }
+
   const res = await fetch("/admin-login", {
+
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ password: pass })
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      password: pass
+    })
+
   });
 
   const data = await res.json();
 
+
   if(data.success){
 
     document.getElementById("login").style.display = "none";
+
     document.getElementById("panel").style.display = "block";
 
     loadData();
@@ -135,69 +224,113 @@ async function login() {
     alert("Wrong Password ❌");
 
   }
+
 }
 
 
+/* ================= LOAD DATA ================= */
 
 async function loadData(){
 
-  const res = await fetch("/admin-data");
-  const data = await res.json();
+  try{
+
+    const res = await fetch("/admin-data");
+
+    const data = await res.json();
 
 
-  // USERS
-  document.getElementById("users").innerText = data.users;
+    /* USERS */
+
+    document.getElementById("users").innerText = data.users;
 
 
-  // MESSAGES (WITH STATUS)
+    /* MESSAGES */
 
-  let msgHtml = "";
+    let msgHtml = "";
 
-  data.messages.forEach(m => {
-
-    if(m.deleted){
-
-      msgHtml += `
-        <p class="deleted">
-          ❌ ${m.msg} (Deleted)
-        </p>
-      `;
-
-    } else {
+    data.messages.forEach(m => {
 
       msgHtml += `
-        <p>
-          ✅ ${m.msg}
-        </p>
+        <tr>
+
+          <td>${m.msg || ""}</td>
+
+          <td class="${m.seen ? "seen" : "notseen"}">
+            ${m.seen ? "Yes" : "No"}
+          </td>
+
+          <td>
+            ${m.deleted ? "Deleted ❌" : "Active ✅"}
+          </td>
+
+          <td>
+            ${
+              !m.deleted
+              ?
+              `<button class="delBtn"
+                onclick="delMsg('${m._id}')">
+                X
+              </button>`
+              :
+              "-"
+            }
+          </td>
+
+        </tr>
       `;
 
-    }
+    });
 
+    document.getElementById("msgTable").innerHTML = msgHtml;
+
+
+    /* SCANS */
+
+    let scanHtml = "";
+
+    data.scans.forEach(s => {
+
+      const time = new Date(s.time).toLocaleString();
+
+      scanHtml += `
+        <tr>
+
+          <td>${time}</td>
+          <td>${s.ip || ""}</td>
+          <td>${s.country || ""}</td>
+          <td>${s.city || ""}</td>
+
+        </tr>
+      `;
+
+    });
+
+    document.getElementById("scanTable").innerHTML = scanHtml;
+
+  }
+
+  catch(err){
+
+    console.log("Admin Load Error:",err);
+
+    alert("Failed to load admin data");
+
+  }
+
+}
+
+
+/* ================= DELETE ================= */
+
+async function delMsg(id){
+
+  if(!confirm("Delete this message?")) return;
+
+  await fetch("/delete/" + id, {
+    method: "DELETE"
   });
 
-  document.getElementById("msgs").innerHTML = msgHtml;
-
-
-  // SCANS
-
-  let scanHtml = "";
-
-  data.scans.forEach(s => {
-
-    const time = new Date(s.time).toLocaleString();
-
-    scanHtml += `
-      <tr>
-        <td>${time}</td>
-        <td>${s.ip}</td>
-        <td>${s.country}</td>
-        <td>${s.city}</td>
-      </tr>
-    `;
-
-  });
-
-  document.getElementById("scanTable").innerHTML = scanHtml;
+  loadData();
 
 }
 
