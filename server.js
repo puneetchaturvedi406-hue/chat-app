@@ -35,13 +35,18 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch(err => console.log("MongoDB Error ❌", err));
 
-// ================= MESSAGE SCHEMA (SOFT DELETE) =================
+// ================= MESSAGE SCHEMA =================
 
 const MsgSchema = new mongoose.Schema({
 
   msg: String,
 
   deleted: {
+    type: Boolean,
+    default: false
+  },
+
+  seen: {
     type: Boolean,
     default: false
   },
@@ -115,7 +120,7 @@ app.get("/track", async (req, res) => {
   res.redirect("/");
 });
 
-// ================= DELETE MESSAGE (SOFT) =================
+// ================= DELETE MESSAGE =================
 
 app.delete("/delete/:id", async (req, res) => {
 
@@ -143,11 +148,10 @@ app.post("/admin-login", (req, res) => {
 
   const { password } = req.body;
 
-  if (password === ADMIN_PASSWORD) {
-    res.json({ success: true });
-  } else {
-    res.json({ success: false });
-  }
+  res.json({
+    success: password === ADMIN_PASSWORD
+  });
+
 });
 
 
@@ -155,7 +159,6 @@ app.get("/admin-data", async (req, res) => {
 
   try {
 
-    // All messages (deleted + active)
     const messages = await Message.find()
       .sort({ time: -1 })
       .limit(100);
@@ -186,7 +189,7 @@ io.on("connection", (socket) => {
 
   console.log("New user:", socket.id);
 
-  // JOIN ROOM
+  // JOIN
   socket.on("join", async (password) => {
 
     if (password !== CHAT_PASSWORD) {
@@ -203,7 +206,10 @@ io.on("connection", (socket) => {
 
     socket.join("privateRoom");
 
-    // Send only NON-DELETED messages
+    // SEND ONLINE COUNT
+    io.to("privateRoom").emit("onlineCount", connectedUsers);
+
+    // OLD MSG
     const oldMessages = await Message.find({
       deleted: false
     })
@@ -215,6 +221,7 @@ io.on("connection", (socket) => {
     socket.emit("joinSuccess", "Joined ✅");
   });
 
+
   // NEW MESSAGE
   socket.on("message", async (msg) => {
 
@@ -222,7 +229,8 @@ io.on("connection", (socket) => {
 
       const newMsg = await Message.create({
         msg,
-        deleted: false
+        deleted: false,
+        seen: false
       });
 
       io.to("privateRoom").emit("message", newMsg);
@@ -234,12 +242,33 @@ io.on("connection", (socket) => {
 
   });
 
+
+  // SEEN
+  socket.on("seen", async (id) => {
+
+    try {
+
+      await Message.findByIdAndUpdate(id, {
+        seen: true
+      });
+
+      io.to("privateRoom").emit("seen", id);
+
+    } catch (err) {
+      console.log("Seen Error ❌", err);
+    }
+
+  });
+
+
   // DISCONNECT
   socket.on("disconnect", () => {
 
     if (connectedUsers > 0) {
       connectedUsers--;
     }
+
+    io.to("privateRoom").emit("onlineCount", connectedUsers);
 
     console.log("User disconnected ❌");
   });

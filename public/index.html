@@ -3,8 +3,6 @@
 <head>
 
 <meta charset="UTF-8">
-
-<!-- MOBILE FIX -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Private Chat</title>
@@ -13,230 +11,183 @@
 
 <style>
 
-/* ================= BODY ================= */
+/* ================= THEME ================= */
 
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  font-family: "Segoe UI", Arial, sans-serif;
-
-  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+:root{
+  --bg:#0f2027;
+  --card:#121212;
+  --head:#1f1f1f;
+  --input:#2c2c2c;
+  --me:#25d366;
+  --other:#2a2a2a;
+  --text:white;
 }
 
+.light{
+  --bg:#f2f2f2;
+  --card:#ffffff;
+  --head:#eeeeee;
+  --input:#dddddd;
+  --me:#00a884;
+  --other:#cccccc;
+  --text:black;
+}
+
+/* ================= BODY ================= */
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:Arial;
+  background:var(--bg);
+  color:var(--text);
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
 
 /* ================= LOGIN ================= */
 
-#loginBox {
-  width: 90%;
-  max-width: 350px;
-  background: #1e1e1e;
-  padding: 25px;
-  border-radius: 15px;
-  text-align: center;
-
-  box-shadow: 0 0 20px rgba(0,0,0,0.6);
-  color: white;
+.box{
+  width:90%;
+  max-width:350px;
+  background:var(--card);
+  padding:25px;
+  border-radius:15px;
+  text-align:center;
+  box-shadow:0 0 20px rgba(0,0,0,.6);
 }
 
-#loginBox h2 {
-  margin-bottom: 15px;
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border:none;
+  border-radius:8px;
+  background:var(--input);
+  color:var(--text);
 }
 
-/* Password Box */
-
-.passBox {
-  position: relative;
-}
-
-#loginBox input {
-  width: 100%;
-  padding: 10px 40px 10px 10px;
-  margin: 10px 0;
-
-  border-radius: 8px;
-  border: none;
-
-  background: #2c2c2c;
-  color: white;
-  font-size: 15px;
-}
-
-/* Eye Icon */
-
-.eye {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-size: 18px;
-  color: #aaa;
-}
-
-.eye:hover {
-  color: white;
-}
-
-
-#loginBox button {
-  width: 100%;
-  padding: 10px;
-
-  border: none;
-  border-radius: 8px;
-
-  background: #25d366;
-  color: black;
-
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#loginBox button:hover {
-  opacity: 0.8;
+button{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:var(--me);
+  cursor:pointer;
+  font-size:15px;
 }
 
 
 /* ================= CHAT ================= */
 
-#chatBox {
-  display: none;
+#chatBox{
+  display:none;
+  width:95%;
+  max-width:420px;
+  height:85vh;
+  background:var(--card);
+  border-radius:15px;
+  flex-direction:column;
+}
 
-  width: 95%;
-  max-width: 420px;
-  height: 85vh;
+#chatHeader{
+  background:var(--head);
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-  background: #121212;
-  color: white;
+#messages{
+  flex:1;
+  padding:10px;
+  overflow-y:auto;
+  background:#0d0d0d;
+}
 
-  border-radius: 15px;
-  box-shadow: 0 0 25px rgba(0,0,0,0.7);
+.msg{
+  max-width:70%;
+  padding:8px;
+  margin:5px 0;
+  border-radius:10px;
+}
 
-  flex-direction: column;
+.me{
+  background:var(--me);
+  color:black;
+  margin-left:auto;
+}
+
+.other{
+  background:var(--other);
+}
+
+.status{
+  font-size:10px;
+  text-align:right;
+  opacity:.7;
+}
+
+#inputBox{
+  display:flex;
+  padding:10px;
+  background:var(--head);
+}
+
+#msgInput{
+  flex:1;
+  border-radius:20px;
+}
+
+#sendBtn{
+  width:40px;
+  height:40px;
+  border-radius:50%;
 }
 
 
-/* ================= HEADER ================= */
+/* ================= ADMIN ================= */
 
-#chatHeader {
-  padding: 12px;
-  background: #1f1f1f;
-  text-align: center;
-
-  font-weight: bold;
-  border-radius: 15px 15px 0 0;
+#adminBox{
+  display:none;
+  width:95%;
+  max-width:700px;
+  background:var(--card);
+  padding:20px;
+  border-radius:15px;
 }
 
-
-/* ================= MESSAGES ================= */
-
-#messages {
-  flex: 1;
-  overflow-y: auto;
-
-  padding: 10px;
-  background: #0d0d0d;
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
 }
 
-
-/* WhatsApp Bubble */
-
-.msg {
-  max-width: 75%;
-  margin: 6px 0;
-  padding: 8px 12px;
-
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.4;
+th,td{
+  border:1px solid #444;
+  padding:5px;
+  text-align:center;
 }
 
-.me {
-  background: #25d366;
-  color: black;
-
-  margin-left: auto;
-  border-bottom-right-radius: 3px;
-}
-
-.other {
-  background: #2a2a2a;
-  color: white;
-
-  margin-right: auto;
-  border-bottom-left-radius: 3px;
-}
-
-
-/* ================= INPUT ================= */
-
-#inputBox {
-  display: flex;
-  padding: 10px;
-
-  background: #1f1f1f;
-  border-radius: 0 0 15px 15px;
-}
-
-#msgInput {
-  flex: 1;
-  padding: 8px;
-
-  border: none;
-  border-radius: 20px;
-
-  background: #2c2c2c;
-  color: white;
-
-  font-size: 14px;
-  outline: none;
-}
-
-#sendBtn {
-  margin-left: 8px;
-
-  border: none;
-  border-radius: 50%;
-
-  width: 40px;
-  height: 40px;
-
-  background: #25d366;
-  color: black;
-
-  font-size: 16px;
-  cursor: pointer;
+.delBtn{
+  background:red;
+  color:white;
+  padding:5px;
+  border:none;
+  cursor:pointer;
 }
 
 
 /* ================= MOBILE ================= */
 
-@media (max-width: 768px) {
+@media(max-width:768px){
 
-  body{
-    padding: 0;
-  }
-
-  #chatBox {
-    width: 100%;
-    height: 100vh;
-    border-radius: 0;
-  }
-
-  #chatHeader {
-    border-radius: 0;
-  }
-
-  #inputBox {
-    border-radius: 0;
-  }
-
-  #loginBox{
-    width: 95%;
+  #chatBox{
+    width:100%;
+    height:100vh;
+    border-radius:0;
   }
 
 }
@@ -244,25 +195,35 @@ body {
 </style>
 </head>
 
-
 <body>
 
 
-<!-- LOGIN -->
+<!-- USER LOGIN -->
 
-<div id="loginBox">
+<div id="loginBox" class="box">
 
-  <h2>🔐 Enter Password</h2>
+  <h3>User Login</h3>
 
-  <div class="passBox">
-
-    <input type="password" id="password" placeholder="Password">
-
-    <span class="eye" onclick="togglePass()">👁️</span>
-
-  </div>
+  <input id="password" type="password" placeholder="Password">
 
   <button onclick="joinChat()">Join</button>
+
+  <br><br>
+
+  <button onclick="openAdmin()">Admin Panel</button>
+
+</div>
+
+
+<!-- ADMIN LOGIN -->
+
+<div id="adminLogin" class="box" style="display:none;">
+
+  <h3>Admin Login</h3>
+
+  <input id="adminPass" type="password" placeholder="Admin Password">
+
+  <button onclick="adminLogin()">Login</button>
 
 </div>
 
@@ -272,18 +233,48 @@ body {
 <div id="chatBox">
 
   <div id="chatHeader">
-    💬 Private Chat
+
+    <div>
+      💬 Chat
+      <div id="online">0 online</div>
+    </div>
+
+    <button onclick="toggleMode()">🌓</button>
+
   </div>
 
   <div id="messages"></div>
 
   <div id="inputBox">
 
-    <input type="text" id="msgInput" placeholder="Type message...">
+    <input id="msgInput" placeholder="Message">
 
     <button id="sendBtn" onclick="sendMsg()">➤</button>
 
   </div>
+
+</div>
+
+
+<!-- ADMIN PANEL -->
+
+<div id="adminBox">
+
+  <h3>Admin Dashboard</h3>
+
+  <p>Online: <span id="adminUsers">0</span></p>
+
+  <h4>Messages</h4>
+
+  <table id="msgTable"></table>
+
+  <h4>IP Scans</h4>
+
+  <table id="scanTable"></table>
+
+  <br>
+
+  <button onclick="location.reload()">Logout</button>
 
 </div>
 
@@ -293,126 +284,198 @@ body {
 const socket = io();
 
 
-/* PASSWORD SHOW / HIDE */
+/* ================= USER ================= */
 
-function togglePass(){
+function joinChat(){
 
-  const pass = document.getElementById("password");
+  if(!password.value) return alert("Enter password");
 
-  if(pass.type === "password"){
-    pass.type = "text";
-  }else{
-    pass.type = "password";
-  }
+  socket.emit("join",password.value);
 
 }
 
+socket.on("joinError",m=>alert(m));
 
-/* JOIN */
+socket.on("joinSuccess",()=>{
 
-function joinChat() {
-
-  const password = document.getElementById("password").value;
-
-  if (!password) {
-    alert("Enter Password!");
-    return;
-  }
-
-  socket.emit("join", password);
-}
-
-
-/* ERROR */
-
-socket.on("joinError", (msg) => {
-  alert(msg);
-});
-
-
-/* SUCCESS */
-
-socket.on("joinSuccess", () => {
-
-  document.getElementById("loginBox").style.display = "none";
-
-  document.getElementById("chatBox").style.display = "flex";
-
-  document.body.style.justifyContent = "flex-start";
-  document.body.style.alignItems = "center";
+  loginBox.style.display="none";
+  chatBox.style.display="flex";
 
 });
 
 
-/* OLD MSG */
+socket.on("onlineCount",n=>{
 
-socket.on("oldMessages", (msgs) => {
+  online.innerText=n+" online";
 
-  msgs.forEach(m => {
-    showMsg(m.msg,false);
+});
+
+
+socket.on("oldMessages",msgs=>{
+
+  msgs.forEach(m=>{
+    showMsg(m.msg,false,m._id,m.seen);
   });
 
 });
 
 
-/* RECEIVE */
+socket.on("message",m=>{
 
-socket.on("message", (data) => {
-
-  showMsg(data.msg,false);
+  showMsg(m.msg,false,m._id,m.seen);
 
 });
 
 
-/* SHOW MSG */
+socket.on("seen",id=>{
 
-function showMsg(msg,self){
+  const s=document.getElementById("s"+id);
+  if(s) s.innerText="Seen";
 
-  const div=document.createElement("div");
+});
 
-  div.classList.add("msg");
 
-  if(self){
-    div.classList.add("me");
-  }else{
-    div.classList.add("other");
+function showMsg(msg,self,id,seen){
+
+  const d=document.createElement("div");
+
+  d.className="msg "+(self?"me":"other");
+
+  d.innerHTML=`
+    ${msg}
+    <div class="status" id="s${id}">
+      ${self?(seen?"Seen":"Delivered"):""}
+    </div>
+  `;
+
+  messages.appendChild(d);
+
+  messages.scrollTop=messages.scrollHeight;
+
+  if(!self && id){
+    socket.emit("seen",id);
   }
-
-  div.innerText=msg;
-
-  document.getElementById("messages").appendChild(div);
-
-  const box=document.getElementById("messages");
-  box.scrollTop=box.scrollHeight;
 
 }
 
-
-/* SEND */
 
 function sendMsg(){
 
-  const msg = document.getElementById("msgInput").value;
+  if(!msgInput.value.trim()) return;
 
-  if(!msg.trim()) return;
+  socket.emit("message",msgInput.value);
 
-  socket.emit("message", msg);
-
-  document.getElementById("msgInput").value = "";
+  msgInput.value="";
 
 }
 
 
-/* ENTER KEY */
+/* ================= ADMIN ================= */
 
-document.getElementById("msgInput")
-.addEventListener("keydown",function(e){
+function openAdmin(){
 
-  if(e.key==="Enter"){
-    sendMsg();
-  }
+  loginBox.style.display="none";
+  adminLogin.style.display="block";
 
-});
+}
+
+
+function adminLogin(){
+
+  fetch("/admin-login",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      password:adminPass.value
+    })
+  })
+
+  .then(r=>r.json())
+  .then(d=>{
+
+    if(!d.success){
+      alert("Wrong Admin Password");
+      return;
+    }
+
+    adminLogin.style.display="none";
+    adminBox.style.display="block";
+
+    loadAdmin();
+
+  });
+
+}
+
+
+function loadAdmin(){
+
+  fetch("/admin-data")
+  .then(r=>r.json())
+  .then(d=>{
+
+    adminUsers.innerText=d.users;
+
+    /* Messages */
+
+    msgTable.innerHTML=
+    "<tr><th>Msg</th><th>Seen</th><th>Del</th></tr>";
+
+    d.messages.forEach(m=>{
+
+      msgTable.innerHTML+=`
+        <tr>
+          <td>${m.msg}</td>
+          <td>${m.seen}</td>
+          <td>
+            <button class="delBtn"
+            onclick="delMsg('${m._id}')">X</button>
+          </td>
+        </tr>
+      `;
+
+    });
+
+
+    /* Scans */
+
+    scanTable.innerHTML=
+    "<tr><th>IP</th><th>Country</th><th>City</th></tr>";
+
+    d.scans.forEach(s=>{
+
+      scanTable.innerHTML+=`
+        <tr>
+          <td>${s.ip}</td>
+          <td>${s.country}</td>
+          <td>${s.city}</td>
+        </tr>
+      `;
+
+    });
+
+  });
+
+}
+
+
+function delMsg(id){
+
+  fetch("/delete/"+id,{
+    method:"DELETE"
+  })
+  .then(()=>loadAdmin());
+
+}
+
+
+/* ================= MODE ================= */
+
+function toggleMode(){
+
+  document.body.classList.toggle("light");
+
+}
 
 </script>
 
