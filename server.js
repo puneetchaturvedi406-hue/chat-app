@@ -141,30 +141,56 @@ app.delete("/delete/:id", async (req, res) => {
   }
 
 });
+// ================= ADMIN AUTH =================
 
-// ================= ADMIN PANEL =================
+const ADMIN_TOKEN = "QT_" + Math.random().toString(36).slice(2);
+
+
+/* LOGIN */
 
 app.post("/admin-login", (req, res) => {
 
   const { password } = req.body;
 
+  if(password !== ADMIN_PASSWORD){
+
+    return res.json({ success:false });
+
+  }
+
   res.json({
-    success: password === ADMIN_PASSWORD
+    success:true,
+    token: ADMIN_TOKEN
   });
 
 });
 
 
+/* GET DATA */
+
 app.get("/admin-data", async (req, res) => {
+
+  const token = req.headers.authorization;
+
+
+  // 🔐 SECURITY CHECK
+  if(token !== ADMIN_TOKEN){
+
+    return res.status(401).json({
+      error:"Unauthorized"
+    });
+
+  }
+
 
   try {
 
     const messages = await Message.find()
-      .sort({ time: -1 })
+      .sort({ time:-1 })
       .limit(100);
 
     const scans = await Scan.find()
-      .sort({ time: -1 })
+      .sort({ time:-1 })
       .limit(100);
 
     res.json({
@@ -178,9 +204,11 @@ app.get("/admin-data", async (req, res) => {
     console.log("Admin Error ❌", err);
 
     res.status(500).json({
-      error: "Server Error"
+      error:"Server Error"
     });
+
   }
+
 });
 
 // ================= SOCKET =================

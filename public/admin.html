@@ -26,10 +26,6 @@ button{
   font-weight: bold;
 }
 
-button:hover{
-  opacity: 0.8;
-}
-
 .box {
   background: #222;
   padding: 15px;
@@ -40,7 +36,6 @@ button:hover{
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
 }
 
 th, td {
@@ -58,31 +53,11 @@ th {
   display: none;
 }
 
-.deleted {
-  color: red;
-  font-style: italic;
-}
-
-.seen {
-  color: lightgreen;
-}
-
-.notseen {
-  color: orange;
-}
-
 .delBtn{
   background: red;
   color: white;
   padding: 4px 8px;
-  border-radius: 4px;
   cursor: pointer;
-}
-
-.topBar{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 </style>
@@ -110,34 +85,24 @@ th {
 <div id="panel">
 
 
-<div class="topBar">
+<h3>📊 Dashboard</h3>
 
-  <h3>📊 Dashboard</h3>
+<button onclick="loadData()">🔄 Refresh</button>
 
-  <button onclick="loadData()">🔄 Refresh</button>
-
-</div>
-
-
-<!-- USERS -->
 
 <div class="box">
 
-  <h4>👥 Connected Users</h4>
-
+  <h4>👥 Users</h4>
   <p id="users">0</p>
 
 </div>
 
-
-<!-- MESSAGES -->
 
 <div class="box">
 
   <h4>💬 Messages</h4>
 
   <table>
-
     <thead>
       <tr>
         <th>Message</th>
@@ -148,17 +113,14 @@ th {
     </thead>
 
     <tbody id="msgTable"></tbody>
-
   </table>
 
 </div>
 
 
-<!-- SCAN HISTORY -->
-
 <div class="box">
 
-  <h4>🌍 QR / Visitor History</h4>
+  <h4>🌍 Visitor History</h4>
 
   <table>
 
@@ -181,6 +143,9 @@ th {
 
 
 <script>
+
+
+let token = "";
 
 
 /* ================= LOGIN ================= */
@@ -213,8 +178,9 @@ async function login() {
 
   if(data.success){
 
-    document.getElementById("login").style.display = "none";
+    token = data.token;
 
+    document.getElementById("login").style.display = "none";
     document.getElementById("panel").style.display = "block";
 
     loadData();
@@ -234,7 +200,21 @@ async function loadData(){
 
   try{
 
-    const res = await fetch("/admin-data");
+    const res = await fetch("/admin-data",{
+
+      headers:{
+        "Authorization": token
+      }
+
+    });
+
+    if(!res.ok){
+
+      alert("Session expired ❌");
+      location.reload();
+      return;
+
+    }
 
     const data = await res.json();
 
@@ -251,32 +231,30 @@ async function loadData(){
     data.messages.forEach(m => {
 
       msgHtml += `
+
         <tr>
 
-          <td>${m.msg || ""}</td>
+          <td>${m.msg}</td>
 
-          <td class="${m.seen ? "seen" : "notseen"}">
-            ${m.seen ? "Yes" : "No"}
-          </td>
+          <td>${m.seen ? "Yes" : "No"}</td>
 
-          <td>
-            ${m.deleted ? "Deleted ❌" : "Active ✅"}
-          </td>
+          <td>${m.deleted ? "Deleted" : "Active"}</td>
 
           <td>
+
             ${
               !m.deleted
               ?
               `<button class="delBtn"
-                onclick="delMsg('${m._id}')">
-                X
-              </button>`
+               onclick="delMsg('${m._id}')">X</button>`
               :
               "-"
             }
+
           </td>
 
         </tr>
+
       `;
 
     });
@@ -293,27 +271,28 @@ async function loadData(){
       const time = new Date(s.time).toLocaleString();
 
       scanHtml += `
+
         <tr>
 
           <td>${time}</td>
-          <td>${s.ip || ""}</td>
-          <td>${s.country || ""}</td>
-          <td>${s.city || ""}</td>
+          <td>${s.ip}</td>
+          <td>${s.country}</td>
+          <td>${s.city}</td>
 
         </tr>
+
       `;
 
     });
 
     document.getElementById("scanTable").innerHTML = scanHtml;
 
-  }
 
-  catch(err){
+  }catch(err){
 
-    console.log("Admin Load Error:",err);
+    console.log(err);
 
-    alert("Failed to load admin data");
+    alert("Failed to load ❌");
 
   }
 
@@ -324,10 +303,10 @@ async function loadData(){
 
 async function delMsg(id){
 
-  if(!confirm("Delete this message?")) return;
+  if(!confirm("Delete?")) return;
 
-  await fetch("/delete/" + id, {
-    method: "DELETE"
+  await fetch("/delete/"+id,{
+    method:"DELETE"
   });
 
   loadData();
