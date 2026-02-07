@@ -189,6 +189,7 @@ io.on("connection", (socket) => {
 
   console.log("New user:", socket.id);
 
+
   // JOIN
   socket.on("join", async (password) => {
 
@@ -206,8 +207,9 @@ io.on("connection", (socket) => {
 
     socket.join("privateRoom");
 
-    // SEND ONLINE COUNT
+    // ONLINE COUNT
     io.to("privateRoom").emit("onlineCount", connectedUsers);
+
 
     // OLD MSG
     const oldMessages = await Message.find({
@@ -261,7 +263,19 @@ io.on("connection", (socket) => {
   });
 
 
-  // DISCONNECT
+  // ================= TYPING =================
+
+  socket.on("typing", () => {
+    socket.to("privateRoom").emit("typing");
+  });
+
+  socket.on("stopTyping", () => {
+    socket.to("privateRoom").emit("stopTyping");
+  });
+
+
+  // ================= DISCONNECT + LAST SEEN =================
+
   socket.on("disconnect", () => {
 
     if (connectedUsers > 0) {
@@ -269,6 +283,14 @@ io.on("connection", (socket) => {
     }
 
     io.to("privateRoom").emit("onlineCount", connectedUsers);
+
+
+    const time = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    io.to("privateRoom").emit("lastSeen", time);
 
     console.log("User disconnected ❌");
   });
