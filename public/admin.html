@@ -5,7 +5,6 @@
 <title>QuietTalks Admin Panel</title>
 
 <style>
-
 body {
   font-family: Arial;
   background: #111;
@@ -59,7 +58,6 @@ th {
   padding: 4px 8px;
   cursor: pointer;
 }
-
 </style>
 
 </head>
@@ -69,39 +67,25 @@ th {
 <h2>🔐 QuietTalks Admin Panel</h2>
 
 <!-- LOGIN -->
-
 <div id="login">
-
   <input type="password" id="pass" placeholder="Admin Password">
   <br>
-
   <button onclick="login()">Login</button>
-
 </div>
-
 
 <!-- DASHBOARD -->
-
 <div id="panel">
 
-
 <h3>📊 Dashboard</h3>
-
 <button onclick="loadData()">🔄 Refresh</button>
 
-
 <div class="box">
-
   <h4>👥 Users</h4>
   <p id="users">0</p>
-
 </div>
 
-
 <div class="box">
-
   <h4>💬 Messages</h4>
-
   <table>
     <thead>
       <tr>
@@ -111,19 +95,13 @@ th {
         <th>Delete</th>
       </tr>
     </thead>
-
     <tbody id="msgTable"></tbody>
   </table>
-
 </div>
 
-
 <div class="box">
-
   <h4>🌍 Visitor History</h4>
-
   <table>
-
     <thead>
       <tr>
         <th>Time</th>
@@ -132,24 +110,15 @@ th {
         <th>City</th>
       </tr>
     </thead>
-
     <tbody id="scanTable"></tbody>
-
   </table>
-
 </div>
 
 </div>
-
 
 <script>
 
-
-let token = "";
-
-
 /* ================= LOGIN ================= */
-
 async function login() {
 
   const pass = document.getElementById("pass").value;
@@ -160,157 +129,85 @@ async function login() {
   }
 
   const res = await fetch("/admin-login", {
-
     method: "POST",
-
-    headers: {
-      "Content-Type": "application/json"
-    },
-
-    body: JSON.stringify({
-      password: pass
-    })
-
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: pass })
   });
 
   const data = await res.json();
 
-
   if(data.success){
-
-    token = data.token;
-
     document.getElementById("login").style.display = "none";
     document.getElementById("panel").style.display = "block";
-
     loadData();
-
-  } else {
-
+  }else{
     alert("Wrong Password ❌");
-
   }
-
 }
 
-
 /* ================= LOAD DATA ================= */
-
 async function loadData(){
 
   try{
-
-    const res = await fetch("/admin-data",{
-
-      headers:{
-        "Authorization": token
-      }
-
-    });
+    const res = await fetch("/admin-data");
 
     if(!res.ok){
-
       alert("Session expired ❌");
       location.reload();
       return;
-
     }
 
     const data = await res.json();
 
-
-    /* USERS */
-
+    // USERS
     document.getElementById("users").innerText = data.users;
 
-
-    /* MESSAGES */
-
+    // MESSAGES
     let msgHtml = "";
-
     data.messages.forEach(m => {
-
       msgHtml += `
-
         <tr>
-
           <td>${m.msg}</td>
-
           <td>${m.seen ? "Yes" : "No"}</td>
-
           <td>${m.deleted ? "Deleted" : "Active"}</td>
-
           <td>
-
             ${
               !m.deleted
-              ?
-              `<button class="delBtn"
-               onclick="delMsg('${m._id}')">X</button>`
-              :
-              "-"
+              ? `<button class="delBtn" onclick="delMsg('${m._id}')">X</button>`
+              : "-"
             }
-
           </td>
-
         </tr>
-
       `;
-
     });
-
     document.getElementById("msgTable").innerHTML = msgHtml;
 
-
-    /* SCANS */
-
+    // SCANS
     let scanHtml = "";
-
     data.scans.forEach(s => {
-
       const time = new Date(s.time).toLocaleString();
-
       scanHtml += `
-
         <tr>
-
           <td>${time}</td>
           <td>${s.ip}</td>
           <td>${s.country}</td>
           <td>${s.city}</td>
-
         </tr>
-
       `;
-
     });
-
     document.getElementById("scanTable").innerHTML = scanHtml;
 
-
   }catch(err){
-
     console.log(err);
-
     alert("Failed to load ❌");
-
   }
-
 }
 
-
 /* ================= DELETE ================= */
-
 async function delMsg(id){
-
   if(!confirm("Delete?")) return;
-
-  await fetch("/delete/"+id,{
-    method:"DELETE"
-  });
-
+  await fetch("/delete/"+id,{ method:"DELETE" });
   loadData();
-
 }
 
 </script>

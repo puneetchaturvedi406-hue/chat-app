@@ -41,12 +41,10 @@ body{
   font-family:Arial;
   background:var(--bg);
   color:var(--text);
-
   display:flex;
   justify-content:center;
   align-items:center;
 }
-
 
 /* ================= LOGIN ================= */
 
@@ -80,7 +78,6 @@ button{
   font-size:15px;
 }
 
-
 /* ================= CHAT ================= */
 
 #chatBox{
@@ -93,17 +90,14 @@ button{
   flex-direction:column;
 }
 
-
 /* ================= HEADER ================= */
 
 #chatHeader{
   background:var(--head);
   padding:10px;
-
   display:flex;
   justify-content:space-between;
   align-items:center;
-
   position:relative;
 }
 
@@ -115,20 +109,16 @@ button{
   color:var(--text);
 }
 
-
-/* MENU */
+/* ================= MENU ================= */
 
 #menu{
   display:none;
-
   position:absolute;
   top:45px;
   right:10px;
-
   background:var(--card);
   border-radius:8px;
   box-shadow:0 0 10px rgba(0,0,0,.6);
-
   width:160px;
   z-index:100;
 }
@@ -147,6 +137,11 @@ button{
   background:rgba(255,255,255,.1);
 }
 
+#online{
+  font-size:13px;
+  opacity:.8;
+  cursor:default;
+}
 
 /* ================= MESSAGES ================= */
 
@@ -180,7 +175,6 @@ button{
   opacity:.7;
 }
 
-
 /* ================= INPUT ================= */
 
 #inputBox{
@@ -199,7 +193,6 @@ button{
   height:40px;
   border-radius:50%;
 }
-
 
 /* ================= ADMIN ================= */
 
@@ -232,17 +225,14 @@ th,td{
   cursor:pointer;
 }
 
-
 /* ================= MOBILE ================= */
 
 @media(max-width:768px){
-
   #chatBox{
     width:100%;
     height:100vh;
     border-radius:0;
   }
-
 }
 
 </style>
@@ -250,364 +240,211 @@ th,td{
 
 <body>
 
-
 <!-- USER LOGIN -->
-
 <div id="loginBox" class="box">
-
   <h3>User Login</h3>
-
   <input id="password" type="password" placeholder="Password">
-
   <button onclick="joinChat()">Join</button>
-
 </div>
-
 
 <!-- ADMIN LOGIN -->
-
 <div id="adminLogin" class="box" style="display:none;">
-
   <h3>Admin Login</h3>
-
   <input id="adminPass" type="password" placeholder="Admin Password">
-
   <button onclick="adminLogin()">Login</button>
-
 </div>
 
-
 <!-- CHAT -->
-
 <div id="chatBox">
 
   <div id="chatHeader">
 
-    <div>
-      💬 Chat
-      <div id="online">0 online</div>
+    <div style="font-weight:bold;">
+      QuietTalks
       <div id="status" style="font-size:11px;opacity:.7;"></div>
     </div>
 
-
-    <!-- MENU BUTTON -->
     <button id="menuBtn" onclick="toggleMenu()">⋮</button>
 
-
-    <!-- MENU -->
     <div id="menu">
-
-      <div class="menuItem" onclick="toggleMode()">
-        🌙 Dark / Light
-      </div>
-
-      <div class="menuItem" onclick="openAdmin()">
-        🔐 Admin Panel
-      </div>
-
+      <div class="menuItem" id="online">0 online</div>
+      <div class="menuItem" onclick="toggleMode()">🌙 Dark / Light</div>
+      <div class="menuItem" onclick="openAdmin()">🔐 Admin Panel</div>
     </div>
 
-
   </div>
-
 
   <div id="messages"></div>
 
-
   <div id="inputBox">
-
     <input id="msgInput" placeholder="Message">
-
     <button id="sendBtn" onclick="sendMsg()">➤</button>
-
   </div>
 
 </div>
 
-
 <!-- ADMIN PANEL -->
-
 <div id="adminBox">
-
   <h3>Admin Dashboard</h3>
-
   <p>Online: <span id="adminUsers">0</span></p>
 
   <h4>Messages</h4>
-
   <table id="msgTable"></table>
 
   <h4>IP Scans</h4>
-
   <table id="scanTable"></table>
 
   <br>
-
   <button onclick="location.reload()">Logout</button>
-
 </div>
-
 
 <script>
 
 const socket = io();
-
 let typingTimer;
-
 
 /* ================= USER ================= */
 
 function joinChat(){
-
   if(!password.value) return alert("Enter password");
-
   socket.emit("join",password.value);
-
 }
 
 socket.on("joinError",m=>alert(m));
 
 socket.on("joinSuccess",()=>{
-
   loginBox.style.display="none";
   chatBox.style.display="flex";
-
 });
-
 
 socket.on("onlineCount",n=>{
-
-  online.innerText=n+" online";
-
+  online.innerText = n + " online";
 });
 
-
 socket.on("oldMessages",msgs=>{
-
   msgs.forEach(m=>{
     showMsg(m.msg,false,m._id,m.seen);
   });
-
 });
-
 
 socket.on("message",m=>{
-
   showMsg(m.msg,false,m._id,m.seen);
-
 });
-
 
 socket.on("seen",id=>{
-
   const s=document.getElementById("s"+id);
   if(s) s.innerText="Seen";
-
 });
-
 
 /* ================= TYPING ================= */
 
 msgInput.addEventListener("input",()=>{
-
   socket.emit("typing");
-
   clearTimeout(typingTimer);
-
-  typingTimer=setTimeout(()=>{
-    socket.emit("stopTyping");
-  },800);
-
+  typingTimer=setTimeout(()=>socket.emit("stopTyping"),800);
 });
 
-
-socket.on("typing",()=>{
-
-  status.innerText="Typing...";
-
-});
-
-
-socket.on("stopTyping",()=>{
-
-  status.innerText="";
-
-});
-
+socket.on("typing",()=> status.innerText="Typing...");
+socket.on("stopTyping",()=> status.innerText="");
 
 /* ================= LAST SEEN ================= */
 
 socket.on("lastSeen",time=>{
-
   status.innerText="Last seen at "+time;
-
 });
 
-
 function showMsg(msg,self,id,seen){
-
   const d=document.createElement("div");
-
   d.className="msg "+(self?"me":"other");
-
   d.innerHTML=`
     ${msg}
     <div class="status" id="s${id}">
       ${self?(seen?"Seen":"Delivered"):""}
     </div>
   `;
-
   messages.appendChild(d);
-
   messages.scrollTop=messages.scrollHeight;
-
-  if(!self && id){
-    socket.emit("seen",id);
-  }
-
+  if(!self && id) socket.emit("seen",id);
 }
-
 
 function sendMsg(){
-
   if(!msgInput.value.trim()) return;
-
   socket.emit("message",msgInput.value);
-
   msgInput.value="";
-
 }
-
 
 /* ================= MENU ================= */
 
 function toggleMenu(){
-
-  menu.style.display =
-    menu.style.display==="block" ? "none" : "block";
-
+  menu.style.display = menu.style.display==="block"?"none":"block";
 }
 
-
-/* CLOSE MENU */
-
 document.addEventListener("click",e=>{
-
-  if(!e.target.closest("#menuBtn") &&
-     !e.target.closest("#menu")){
-
+  if(!e.target.closest("#menuBtn") && !e.target.closest("#menu")){
     menu.style.display="none";
   }
-
 });
-
 
 /* ================= ADMIN ================= */
 
 function openAdmin(){
-
   chatBox.style.display="none";
   adminLogin.style.display="block";
-
   menu.style.display="none";
-
 }
 
-
 function adminLogin(){
-
   fetch("/admin-login",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      password:adminPass.value
-    })
+    body:JSON.stringify({ password:adminPass.value })
   })
-
   .then(r=>r.json())
   .then(d=>{
-
-    if(!d.success){
-      alert("Wrong Admin Password");
-      return;
-    }
-
+    if(!d.success) return alert("Wrong Admin Password");
     adminLogin.style.display="none";
     adminBox.style.display="block";
-
     loadAdmin();
-
   });
-
 }
 
-
 function loadAdmin(){
-
   fetch("/admin-data")
   .then(r=>r.json())
   .then(d=>{
-
     adminUsers.innerText=d.users;
 
-
-    msgTable.innerHTML=
-    "<tr><th>Msg</th><th>Seen</th><th>Del</th></tr>";
-
+    msgTable.innerHTML="<tr><th>Msg</th><th>Seen</th><th>Del</th></tr>";
     d.messages.forEach(m=>{
-
       msgTable.innerHTML+=`
         <tr>
           <td>${m.msg}</td>
           <td>${m.seen}</td>
-          <td>
-            <button class="delBtn"
-            onclick="delMsg('${m._id}')">X</button>
-          </td>
-        </tr>
-      `;
-
+          <td><button class="delBtn" onclick="delMsg('${m._id}')">X</button></td>
+        </tr>`;
     });
 
-
-    scanTable.innerHTML=
-    "<tr><th>IP</th><th>Country</th><th>City</th></tr>";
-
+    scanTable.innerHTML="<tr><th>IP</th><th>Country</th><th>City</th></tr>";
     d.scans.forEach(s=>{
-
       scanTable.innerHTML+=`
         <tr>
           <td>${s.ip}</td>
           <td>${s.country}</td>
           <td>${s.city}</td>
-        </tr>
-      `;
-
+        </tr>`;
     });
-
   });
-
 }
-
 
 function delMsg(id){
-
-  fetch("/delete/"+id,{
-    method:"DELETE"
-  })
-  .then(()=>loadAdmin());
-
+  fetch("/delete/"+id,{method:"DELETE"}).then(loadAdmin);
 }
-
 
 /* ================= MODE ================= */
 
 function toggleMode(){
-
   document.body.classList.toggle("light");
-
   menu.style.display="none";
-
 }
 
 </script>
